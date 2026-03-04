@@ -105,8 +105,9 @@ trait SQLSchema
                         $property->setDefaultValue([Carbon::class, 'now']);
                         break;
 
-                    case $platform->getReservedKeywordsList()->isKeyword($column->getDefault()):
-                        break;
+                    if ($default instanceof \Doctrine\DBAL\Schema\DefaultExpression) {
+                        $default = (string) $default;
+                    }
 
                     default:
                         $property->setDefaultValue($column->getDefault());
