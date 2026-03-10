@@ -100,18 +100,19 @@ trait SQLSchema
             if ($column->getDefault()) {
                 $property->addAnnotation(new ComputedDefaultValue);
 
-                switch (true) {
-                    case $column->getDefault() === $platform->getCurrentTimestampSQL():
+                $default = $column->getDefault();
+
+                // DBAL 4.x returns DefaultExpression objects instead of strings
+                if ($default instanceof \Doctrine\DBAL\Schema\DefaultExpression) {
+                    if ($default instanceof \Doctrine\DBAL\Schema\DefaultExpression\CurrentTimestamp) {
                         $property->setDefaultValue([Carbon::class, 'now']);
-                        break;
-
-                    if ($default instanceof \Doctrine\DBAL\Schema\DefaultExpression) {
-                        $default = (string) $default;
                     }
-
-                    default:
-                        $property->setDefaultValue($column->getDefault());
-                        break;
+                    // Other DefaultExpression types (CurrentDate, CurrentTime) are
+                    // marked as computed via the annotation above but need no default value
+                } elseif ($default === $platform->getCurrentTimestampSQL()) {
+                    $property->setDefaultValue([Carbon::class, 'now']);
+                } else {
+                    $property->setDefaultValue($default);
                 }
             }
 
