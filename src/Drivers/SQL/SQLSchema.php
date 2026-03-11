@@ -154,10 +154,16 @@ trait SQLSchema
             }
 
             if ($column->getDefault()) {
-                if ($column->getDefault() === $platform->getCurrentTimestampSQL()) {
+                $default = $column->getDefault();
+
+                // DBAL 4.x returns DefaultExpression objects instead of strings
+                if (!is_string($default)) {
+                    // DefaultExpression\CurrentTimestamp and similar → treat as "now"
                     $propDesc['default_is_carbon_now'] = true;
-                } elseif (!$platform->getReservedKeywordsList()->isKeyword($column->getDefault())) {
-                    $propDesc['default_value'] = $column->getDefault();
+                } elseif ($default === $platform->getCurrentTimestampSQL()) {
+                    $propDesc['default_is_carbon_now'] = true;
+                } elseif (!$platform->getReservedKeywordsList()->isKeyword($default)) {
+                    $propDesc['default_value'] = $default;
                 }
             }
 
