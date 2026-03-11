@@ -74,3 +74,4 @@ trait SQLConnection
         return $this->dbalInstance;
     }
 }
+
